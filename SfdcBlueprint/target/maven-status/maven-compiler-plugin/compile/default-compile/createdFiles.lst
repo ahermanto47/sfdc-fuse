@@ -1,0 +1,17 @@
+org\apache\camel\salesforce\dto\Contact.class
+org\xlamet\salesforce\bulk\dto\ObjectFactory.class
+org\xlamet\salesforce\processor\QueueEventProcessor.class
+org\xlamet\salesforce\bulk\dto\SObjects$SObject.class
+org\xlamet\salesforce\processor\QueueEventBulkRequest.class
+org\apache\camel\salesforce\dto\Contact_LevelEnum.class
+org\apache\camel\salesforce\dto\Contact_SalutationEnum.class
+org\apache\camel\salesforce\dto\QueueEvent__c.class
+org\apache\camel\salesforce\dto\QueryRecordsQueueEvent__c.class
+org\xlamet\salesforce\bulk\dto\package-info.class
+org\apache\camel\salesforce\dto\QueueEvent__c_StatusEnum.class
+org\apache\camel\salesforce\dto\QueryRecordsContact.class
+org\apache\camel\salesforce\dto\Contact_LeadSourceEnum.class
+org\jboss\quickstarts\fuse\salesforce\JsonHelper.class
+org\apache\camel\salesforce\dto\Contact_CleanStatusEnum.class
+org\xlamet\salesforce\bulk\dto\SObjects.class
+org\xlamet\salesforce\processor\DataJobInfo.class

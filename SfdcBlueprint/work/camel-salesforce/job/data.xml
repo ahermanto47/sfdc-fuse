@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<sObjects xmlns="http://www.force.com/2009/06/asyncapi/dataload">
+    <sObject>
+        <Name>ContactChangeEvent</Name>
+        <Id>a0041000003G2rMAAS</Id>
+        <Status__c>INPROCESS</Status__c>
+    </sObject>
+</sObjects>

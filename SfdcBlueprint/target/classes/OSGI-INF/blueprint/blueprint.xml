@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0"
+    xmlns:cm="http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.0.0 http://aries.apache.org/schemas/blueprint-cm/blueprint-cm-1.0.0.xsd http://www.osgi.org/xmlns/blueprint/v1.0.0 http://www.osgi.org/xmlns/blueprint/v1.0.0/blueprint.xsd http://camel.apache.org/schema/blueprint http://camel.apache.org/schema/blueprint/camel-blueprint.xsd">
+    <!-- OSGi blueprint property placeholder -->
+    <cm:property-placeholder id="placeholder" persistent-id="org.jboss.quickstarts.fuse.salesforce">
+        <cm:default-properties>
+            <cm:property name="broker.url" value="vm://amq?broker.persistent=false"/>
+            <cm:property name="broker.username" value=""/>
+            <cm:property name="broker.password" value=""/>
+        </cm:default-properties>
+    </cm:property-placeholder>
+    <bean class="org.apache.activemq.camel.component.ActiveMQComponent" id="activemq">
+        <property name="brokerURL" value="${broker.url}"/>
+        <property name="userName" value="${broker.username}"/>
+        <property name="password" value="${broker.password}"/>
+        <property name="usePooledConnection" value="false"/>
+    </bean>
+    <bean
+        class="org.apache.camel.component.salesforce.SalesforceComponent" id="salesforce">
+        <property name="loginConfig">
+            <bean class="org.apache.camel.component.salesforce.SalesforceLoginConfig">
+                <property name="clientId" value=""/>
+                <property name="clientSecret" value=""/>
+                <property name="userName" value=""/>
+                <property name="password" value=""/>
+            </bean>
+        </property>
+        <property name="packages">
+            <array>
+                <value>org.apache.camel.salesforce.dto</value>
+            </array>
+        </property>
+        <!--         <property name="httpProxyHost" value=""/> -->
+        <!--         <property name="httpProxyPort" value="8080"/> -->
+    </bean>
+    <camelContext id="salesforce-example-context" xmlns="http://camel.apache.org/schema/blueprint">
+        <dataFormats>
+            <xstream encoding="UTF-8" id="xstream-utf8" permissions="org.apache.camel.dataformat.stream.*"/>
+            <xstream id="xstream-default" permissions="org.apache.camel.dataformat.stream.*"/>
+        </dataFormats>
+        <route id="salesforce-route">
+            <from id="_from1" uri="file:work/camel-salesforce/input"/>
+            <log id="_log1" message="Receiving file ${file:name}"/>
+            <log id="_log2" message="Sending file ${file:name} to Salesforce"/>
+            <bean
+                beanType="org.jboss.quickstarts.fuse.salesforce.JsonHelper"
+                id="_bean1" method="readFile"/>
+            <setHeader headerName="name" id="_setHeader1">
+                <simple>${body.name}</simple>
+            </setHeader>
+            <log id="_log3" message="Creating Contact with name ${body.firstName} ${body.lastName}..."/>
+            <to id="_to1" uri="salesforce:upsertSObject?sObjectName=Contact&amp;sObjectIdName=CustomExternalId__c"/>
+            <choice id="_choice1">
+                <when id="_when1">
+                    <simple>${body} != null</simple>
+                    <log id="_log4" message="Created Contact ${headers.name} with result success=${body.success} and errors=${body.errors}"/>
+                </when>
+                <otherwise id="_otherwise1">
+                    <log id="_log5" message="Updated Contact ${headers.name}"/>
+                </otherwise>
+            </choice>
+        </route>
+        <route id="salesforce-streaming-route">
+            <from id="_from2" uri="salesforce:JBossFuseQuickStartTopic?notifyForOperationDelete=false&amp;notifyForOperationUndelete=false&amp;notifyForOperationCreate=true&amp;notifyForOperationUpdate=true&amp;notifyForFields=ALL&amp;sObjectName=Contact&amp;updateTopic=true&amp;sObjectQuery=SELECT Id, Name FROM Contact"/>
+            <log id="_log6" message="Received ${headers.CamelSalesforceEventType} notification for ${body.name}"/>
+            <setHeader headerName="CamelFileName" id="_setHeader2">
+                <simple>${body.name}</simple>
+            </setHeader>
+            <bean
+                beanType="org.jboss.quickstarts.fuse.salesforce.JsonHelper"
+                id="_bean2" method="writeFile"/>
+            <to id="_to2" uri="file:work/camel-salesforce/output/"/>
+            <log id="_log7" message="Done writing notification to file ${headers.CamelFileName}.json"/>
+        </route>
+        <route id="queueevent-poller">
+            <from id="_from3" uri="timer://foo?fixedRate=true&amp;period=60000"/>
+            <to id="_to3" uri="salesforce:query?sObjectName=QueueEvent__c&amp;sObjectClass=org.apache.camel.salesforce.dto.QueryRecordsQueueEvent__c&amp;sObjectQuery=SELECT id,name,status__c from QueueEvent__c where Status__c = 'New'"/>
+            <choice id="_choice2">
+                <when id="_when2">
+                    <simple>${body.records.size} &gt; 0</simple>
+                    <bean
+                        beanType="org.xlamet.salesforce.processor.QueueEventProcessor"
+                        id="_bean3" method="processEvents"/>
+                    <marshal id="_marshal1">
+                        <jaxb contextPath="org.xlamet.salesforce.bulk.dto"/>
+                    </marshal>
+                    <setHeader headerName="CamelFileName" id="_setHeader5">
+                        <simple>data.xml</simple>
+                    </setHeader>
+                    <to id="_to4" uri="file:work/camel-salesforce/job"/>
+                    <bean
+                        beanType="org.xlamet.salesforce.processor.QueueEventProcessor"
+                        id="_bean4" method="getQueueEventBulkRequest"/>
+                    <to id="_to7" uri="direct:createJob"/>
+                    <marshal id="_marshal2">
+                        <jaxb contextPath="org.apache.camel.component.salesforce.api.dto.bulk"/>
+                    </marshal>
+                    <setHeader headerName="CamelFileName" id="_setHeader6">
+                        <simple>jobinfo.xml</simple>
+                    </setHeader>
+                    <to id="_to14" uri="file:work/camel-salesforce/job"/>
+                    <unmarshal id="_unmarshal2">
+                        <jaxb contextPath="org.apache.camel.component.salesforce.api.dto.bulk"/>
+                    </unmarshal>
+                    <to id="_to8" uri="direct:createBatch"/>
+                    <loop id="_loop1">
+                        <method
+                            beanType="org.xlamet.salesforce.processor.QueueEventProcessor" method="isBatchCompleted"/>
+                        <to id="_to12" uri="direct:getBatch"/>
+                    </loop>
+                    <to id="_to15" uri="language:constant:resource:file:work/camel-salesforce/job/jobinfo.xml"/>
+                    <to id="_to13" uri="direct:closeJob"/>
+                </when>
+            </choice>
+        </route>
+        <route id="_route2">
+            <from id="_from4" uri="direct:createJob"/>
+            <log id="_log8" message="Received data as ${body}"/>
+            <to id="_to5" uri="salesforce://createJob"/>
+        </route>
+        <route id="_route3">
+            <from id="_from5" uri="direct:createBatch"/>
+            <log id="_log9" message="Received data as ${body}"/>
+            <setHeader headerName="contentType" id="_setHeader3">
+                <simple>${body.contentType}</simple>
+            </setHeader>
+            <setHeader headerName="jobId" id="_setHeader4">
+                <simple>${body.id}</simple>
+            </setHeader>
+            <to id="_to9" uri="language:constant:resource:file:work/camel-salesforce/job/data.xml"/>
+            <to id="_to6" uri="salesforce:createBatch"/>
+        </route>
+        <route id="_route1">
+            <from id="_from6" uri="direct:getBatch"/>
+            <to id="_to10" uri="salesforce:getBatch"/>
+        </route>
+        <route id="_route4">
+            <from id="_from7" uri="direct:closeJob"/>
+            <to id="_to11" uri="salesforce:closeJob"/>
+        </route>
+        <route id="file-to-jms-route">
+            <from id="incomingFolder" uri="file:work/in"/>
+            <log id="logReceivingOrder" message="Receiving order ${file:name}"/>
+            <to id="sendIncomingOrder" uri="activemq:incomingOrders"/>
+        </route>
+        <route id="jms-cbr-route" streamCache="true">
+            <from id="listenToIncomingOrder" uri="activemq:queue:incomingOrders"/>
+            <choice id="countrySelection">
+                <when id="UKCustomer">
+                    <xpath id="_xpath1">/order/customer[country = 'UK']</xpath>
+                    <log id="logUK" message="Sending order ${file:name} to the UK"/>
+                    <to id="outputUKFolder" uri="file:work/out/uk"/>
+                </when>
+                <when id="USCustomer">
+                    <xpath id="_xpath2">/order/customer[country = 'US']</xpath>
+                    <log id="logUS" message="Sending order ${file:name} to the US"/>
+                    <to id="outputUSFolder" uri="file:work/out/us"/>
+                </when>
+                <otherwise id="OtherCustomer">
+                    <log id="logOtherCountry" message="Sending order ${file:name} to another country"/>
+                    <to id="outputOtherCountryFolder" uri="file:work/out/others"/>
+                </otherwise>
+            </choice>
+            <log id="logEndProcessing" message="Done processing ${file:name}"/>
+        </route>
+    </camelContext>
+</blueprint>

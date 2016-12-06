@@ -1,0 +1,10 @@
+org\apache\camel\component\salesforce\BulkApiIntegrationTest.class
+org\apache\camel\component\salesforce\BulkApiBatchIntegrationTest$BatchTest.class
+org\apache\camel\component\salesforce\AbstractBulkApiTestBase.class
+org\apache\camel\component\salesforce\LoginConfigHelper.class
+org\apache\camel\component\salesforce\BulkApiBatchIntegrationTest$1.class
+org\apache\camel\component\salesforce\BulkApiQueryIntegrationTest.class
+org\apache\camel\component\salesforce\BulkApiBatchIntegrationTest.class
+org\apache\camel\component\salesforce\AbstractSalesforceTestBase.class
+org\apache\camel\component\salesforce\BulkApiJobIntegrationTest.class
+org\apache\camel\component\salesforce\AbstractBulkApiTestBase$1.class

@@ -1,0 +1,32 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<org.apache.camel.component.salesforce.api.dto.bulk.SObject>
+	<any>
+		<org.apache.camel.salesforce.dto.QueueEvent____c>
+			<attributes>
+				<type>QueueEvent__c</type>
+				<url>/services/data/v33.0/sobjects/QueueEvent__c/a0041000002ozejAAA
+				</url>
+			</attributes>
+			<Id>a0041000002ozejAAA</Id>
+			<Name>ContactChangeEvent</Name>
+		</org.apache.camel.salesforce.dto.QueueEvent____c>
+		<org.apache.camel.salesforce.dto.QueueEvent____c>
+			<attributes>
+				<type>QueueEvent__c</type>
+				<url>/services/data/v33.0/sobjects/QueueEvent__c/a0041000002oxvyAAA
+				</url>
+			</attributes>
+			<Id>a0041000002oxvyAAA</Id>
+			<Name>ContactChangeEvent</Name>
+		</org.apache.camel.salesforce.dto.QueueEvent____c>
+		<org.apache.camel.salesforce.dto.QueueEvent____c>
+			<attributes>
+				<type>QueueEvent__c</type>
+				<url>/services/data/v33.0/sobjects/QueueEvent__c/a0041000002oyGCAAY
+				</url>
+			</attributes>
+			<Id>a0041000002oyGCAAY</Id>
+			<Name>ContactChangeEvent</Name>
+		</org.apache.camel.salesforce.dto.QueueEvent____c>
+	</any>
+</org.apache.camel.component.salesforce.api.dto.bulk.SObject>
